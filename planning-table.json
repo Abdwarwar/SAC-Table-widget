@@ -1,0 +1,121 @@
+{
+  "eula": "",
+  "vendor": "Custom",
+  "license": "MIT",
+  "id": "com.custom.planning.table",
+  "version": "1.0.0",
+  "name": "Planning Table",
+  "newInstancePrefix": "PlanningTable",
+  "description": "Editable planning table with writeback to the SAC model and linked dimension input controls.",
+  "icon": "",
+  "webcomponents": [
+    {
+      "kind": "main",
+      "tag": "com-custom-planning-table",
+      "url": "https://YOUR_HOST/sac-widget/planning-table.js",
+      "integrity": "",
+      "ignoreIntegrity": true
+    },
+    {
+      "kind": "builder",
+      "tag": "com-custom-planning-table-builder",
+      "url": "https://YOUR_HOST/sac-widget/planning-table-builder.js",
+      "integrity": "",
+      "ignoreIntegrity": true
+    },
+    {
+      "kind": "styling",
+      "tag": "com-custom-planning-table-styling",
+      "url": "https://YOUR_HOST/sac-widget/planning-table-styling.js",
+      "integrity": "",
+      "ignoreIntegrity": true
+    }
+  ],
+  "properties": {
+    "width": { "type": "integer", "default": 800 },
+    "height": { "type": "integer", "default": 400 },
+    "planningEnabled": {
+      "type": "boolean",
+      "description": "Allow editing measure cells and writing values back to the model",
+      "default": true
+    },
+    "autoSubmit": {
+      "type": "boolean",
+      "description": "Submit each edited cell to the model immediately",
+      "default": true
+    },
+    "showInputControls": {
+      "type": "boolean",
+      "description": "Show the dimension filter dropdowns above the table",
+      "default": true
+    },
+    "inputControlDimensions": {
+      "type": "string",
+      "description": "Comma separated dimension ids used as linked input controls. Empty = all bound dimensions.",
+      "default": ""
+    },
+    "linkedAnalysisEnabled": {
+      "type": "boolean",
+      "description": "Publish input control selections as filters to linked widgets",
+      "default": true
+    },
+    "headerColor": { "type": "string", "default": "#f2f4f7" },
+    "accentColor": { "type": "string", "default": "#0a6ed1" },
+    "fontSize": { "type": "integer", "default": 13 }
+  },
+  "methods": {
+    "submitPlanningData": {
+      "description": "Submit all pending edited cells to the planning model",
+      "body": "",
+      "parameters": [],
+      "returnType": "boolean"
+    },
+    "discardPlanningData": {
+      "description": "Discard all pending edited cells",
+      "body": "",
+      "parameters": []
+    },
+    "getPendingChanges": {
+      "description": "Returns the pending edited cells as a JSON string",
+      "body": "",
+      "parameters": [],
+      "returnType": "string"
+    },
+    "getSelectedMembers": {
+      "description": "Returns the current input control selection as a JSON string",
+      "body": "",
+      "parameters": [],
+      "returnType": "string"
+    },
+    "clearInputControls": {
+      "description": "Reset all input control selections",
+      "body": "",
+      "parameters": []
+    }
+  },
+  "events": {
+    "onValueChange": {
+      "description": "Fired when a measure cell value is changed by the user"
+    },
+    "onDataSubmitted": {
+      "description": "Fired after edited values were written back to the model"
+    },
+    "onSubmitError": {
+      "description": "Fired when writeback to the model failed"
+    },
+    "onInputControlChange": {
+      "description": "Fired when an input control (dimension) selection changes"
+    },
+    "onCellSelect": {
+      "description": "Fired when a cell is selected"
+    }
+  },
+  "dataBindings": {
+    "myDataBinding": {
+      "feeds": {
+        "dimensions": { "type": "dimension", "targetName": "dimensions" },
+        "measures": { "type": "mainStructureMember", "targetName": "measures" }
+      }
+    }
+  }
+}
