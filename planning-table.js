@@ -18,6 +18,12 @@
         min-width: 140px; padding: 4px 6px; border: 1px solid #c8ced4;
         border-radius: 4px; background: #fff; font-size: 12px; color: inherit;
       }
+      td select.rowic {
+        width: 100%; min-width: 120px; padding: 2px 4px; border: 1px solid #c8ced4;
+        border-radius: 4px; background: #fff; font-size: inherit; color: inherit;
+      }
+      td select.rowic:focus { outline: 2px solid var(--accent, #0a6ed1); outline-offset: -2px; }
+      td.rowcontrol { padding: 3px 5px; }
       .spacer { flex: 1 1 auto; }
       .actions { display: flex; gap: 6px; align-items: center; }
       button {
@@ -57,6 +63,7 @@
       this._shadowRoot.appendChild(template.content.cloneNode(true));
       this._pending = {};
       this._selection = {};
+      this._rowOverrides = {};
       this._rows = [];
       this._dimensions = [];
       this._measures = [];
@@ -65,6 +72,8 @@
       this.autoSubmit = true;
       this.showInputControls = true;
       this.inputControlDimensions = "";
+      this.rowInputControls = true;
+      this.rowInputControlDimensions = "";
       this.linkedAnalysisEnabled = true;
       this.headerColor = "#f2f4f7";
       this.accentColor = "#0a6ed1";
@@ -128,10 +137,12 @@
       this._renderControls();
       if (!hasData) { this.$status.textContent = ""; return; }
 
-      const visibleRows = this._rows.filter((row) =>
+      const indexed = this._rows.map((row, i) => ({ row: row, index: i }));
+      const visibleRows = indexed.filter((entry) =>
         this._dimensions.every((d) => {
           const sel = this._selection[d.id];
-          return !sel || (row[d.id] && row[d.id].id === sel);
+          if (!sel) return true;
+          return this._effMemberId(entry.row, entry.index, d.id) === sel;
         })
       );
 
@@ -142,18 +153,45 @@
         "</tr>";
 
       this.$tbody.innerHTML = "";
-      visibleRows.forEach((row, rowIndex) => {
+      const rowDims = this._rowControlDimensions();
+      visibleRows.forEach((entry) => {
+        const row = entry.row;
+        const rowIndex = entry.index;
         const tr = document.createElement("tr");
         this._dimensions.forEach((d) => {
           const td = document.createElement("td");
-          td.textContent = (row[d.id] && (row[d.id].description || row[d.id].label || row[d.id].id)) || "";
+          const memberId = this._effMemberId(row, rowIndex, d.id);
+          if (rowDims.indexOf(d.id) >= 0) {
+            td.className = "rowcontrol";
+            const select = document.createElement("select");
+            select.className = "rowic";
+            select.innerHTML = this._members(d.id)
+              .map((m) =>
+                '<option value="' + this._esc(m.id) + '">' +
+                this._esc(m.description || m.label || m.id) + "</option>")
+              .join("");
+            select.value = memberId || "";
+            select.addEventListener("change", () => {
+              if (!this._rowOverrides[rowIndex]) this._rowOverrides[rowIndex] = {};
+              this._rowOverrides[rowIndex][d.id] = select.value;
+              this._fire("onRowInputControlChange", {
+                rowIndex: rowIndex, dimension: d.id, member: select.value,
+              });
+              this._render();
+            });
+            td.appendChild(select);
+          } else {
+            const member = this._memberById(d.id, memberId);
+            td.textContent = (member && (member.description || member.label || member.id)) || "";
+          }
           tr.appendChild(td);
         });
+        const sourceRow = this._resolveRow(row, rowIndex) || {};
         this._measures.forEach((m) => {
-          const cell = row[m.id] || {};
+          const cell = sourceRow[m.id] || {};
           const td = document.createElement("td");
           td.className = "measure";
-          const key = this._cellKey(row, m.id);
+          const key = this._cellKey(row, m.id, rowIndex);
           const pending = this._pending[key];
           td.textContent = pending
             ? String(pending.value)
@@ -173,6 +211,7 @@
               if (e.key === "Escape") { td.textContent = cell.formatted || ""; td.blur(); }
             });
             td.addEventListener("blur", () => this._commitCell(td, row, m, cell));
+            td.dataset.rowIndex = String(rowIndex);
           }
           tr.appendChild(td);
         });
@@ -194,12 +233,7 @@
 
       this.$controls.innerHTML = "";
       dims.forEach((d) => {
-        const members = [];
-        const seen = {};
-        this._rows.forEach((r) => {
-          const m = r[d.id];
-          if (m && !seen[m.id]) { seen[m.id] = 1; members.push(m); }
-        });
+        const members = this._members(d.id);
         const holder = document.createElement("div");
         holder.className = "control";
         const label = document.createElement("label");
@@ -248,6 +282,7 @@
 
     _commitCell(td, row, measure, cell) {
       const key = td.dataset.key;
+      const rowIndex = Number(td.dataset.rowIndex);
       const text = (td.textContent || "").trim().replace(/\s/g, "").replace(/,/g, ".");
       const original = cell.raw != null ? Number(cell.raw) : 0;
       if (text === "") { delete this._pending[key]; this._render(); return; }
@@ -260,10 +295,15 @@
       if (value === original && !this._pending[key]) { this._render(); return; }
 
       const selection = { "@MeasureDimension": measure.id };
-      this._dimensions.forEach((d) => { if (row[d.id]) selection[d.id] = row[d.id].id; });
+      this._dimensions.forEach((d) => {
+        const id = this._effMemberId(row, rowIndex, d.id);
+        if (id) selection[d.id] = id;
+      });
 
       this._pending[key] = { selection: selection, value: value, oldValue: original, measureId: measure.id };
-      this._fire("onValueChange", { measureId: measure.id, oldValue: original, newValue: value });
+      this._fire("onValueChange", {
+        measureId: measure.id, oldValue: original, newValue: value, selection: selection,
+      });
 
       if (this.autoSubmit) this.submitPlanningData();
       else this._render();
@@ -309,6 +349,7 @@
 
     clearInputControls() {
       this._selection = {};
+      this._rowOverrides = {};
       this._applyLinkedAnalysis();
       this._render();
     }
@@ -324,8 +365,55 @@
       } catch (e) {}
     }
 
-    _cellKey(row, measureId) {
-      return this._dimensions.map((d) => (row[d.id] ? row[d.id].id : "")).join("|") + "||" + measureId;
+    _cellKey(row, measureId, rowIndex) {
+      return this._dimensions
+        .map((d) => this._effMemberId(row, rowIndex, d.id) || "")
+        .join("|") + "||" + measureId;
+    }
+
+    _rowControlDimensions() {
+      if (!this.rowInputControls) return [];
+      const wanted = (this.rowInputControlDimensions || "")
+        .split(",").map((s) => s.trim()).filter(Boolean);
+      return this._dimensions
+        .filter((d) => !wanted.length || wanted.indexOf(d.id) >= 0 || wanted.indexOf(d.description) >= 0)
+        .map((d) => d.id);
+    }
+
+    _members(dimId) {
+      const members = [];
+      const seen = {};
+      this._rows.forEach((r) => {
+        const m = r[dimId];
+        if (m && !seen[m.id]) { seen[m.id] = 1; members.push(m); }
+      });
+      return members;
+    }
+
+    _memberById(dimId, id) {
+      const list = this._members(dimId);
+      for (let i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+      return null;
+    }
+
+    _effMemberId(row, rowIndex, dimId) {
+      const ov = this._rowOverrides[rowIndex];
+      if (ov && ov[dimId]) return ov[dimId];
+      return row[dimId] ? row[dimId].id : "";
+    }
+
+    _resolveRow(row, rowIndex) {
+      const ov = this._rowOverrides[rowIndex];
+      if (!ov || !Object.keys(ov).length) return row;
+      for (let i = 0; i < this._rows.length; i++) {
+        const candidate = this._rows[i];
+        const match = this._dimensions.every((d) => {
+          const wanted = this._effMemberId(row, rowIndex, d.id);
+          return candidate[d.id] && candidate[d.id].id === wanted;
+        });
+        if (match) return candidate;
+      }
+      return null;
     }
 
     _updateStatus(visible) {
