@@ -68,5 +68,7 @@
     get inputControlDimensions() { return this._cb("inputControlDimensions").value; }
   }
 
-  customElements.define("com-custom-planning-table-builder", Builder);
+  if (!customElements.get("com-custom-planning-table-builder")) {
+    customElements.define("com-custom-planning-table-builder", Builder);
+  }
 })();
