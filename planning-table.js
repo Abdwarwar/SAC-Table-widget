@@ -433,5 +433,7 @@
     }
   }
 
-  customElements.define("com-custom-planning-table", PlanningTable);
+  if (!customElements.get("com-custom-planning-table")) {
+    customElements.define("com-custom-planning-table", PlanningTable);
+  }
 })();
