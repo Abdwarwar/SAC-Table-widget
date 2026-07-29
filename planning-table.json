@@ -3,7 +3,7 @@
   "vendor": "Custom",
   "license": "MIT",
   "id": "com.custom.planning.table",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "name": "Planning Table",
   "newInstancePrefix": "PlanningTable",
   "description": "Editable planning table with writeback to the SAC model and linked dimension input controls.",
@@ -12,21 +12,21 @@
     {
       "kind": "main",
       "tag": "com-custom-planning-table",
-      "url": "https://YOUR_HOST/sac-widget/planning-table.js",
+      "url": "https://sac-plan-link-table.lovable.app/sac-widget/planning-table.js",
       "integrity": "",
       "ignoreIntegrity": true
     },
     {
       "kind": "builder",
       "tag": "com-custom-planning-table-builder",
-      "url": "https://YOUR_HOST/sac-widget/planning-table-builder.js",
+      "url": "https://sac-plan-link-table.lovable.app/sac-widget/planning-table-builder.js",
       "integrity": "",
       "ignoreIntegrity": true
     },
     {
       "kind": "styling",
       "tag": "com-custom-planning-table-styling",
-      "url": "https://YOUR_HOST/sac-widget/planning-table-styling.js",
+      "url": "https://sac-plan-link-table.lovable.app/sac-widget/planning-table-styling.js",
       "integrity": "",
       "ignoreIntegrity": true
     }
