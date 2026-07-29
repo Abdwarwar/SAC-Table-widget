@@ -45,5 +45,7 @@
     get fontSize() { return parseInt(this._el("fontSize").value, 10) || 13; }
   }
 
-  customElements.define("com-custom-planning-table-styling", Styling);
+  if (!customElements.get("com-custom-planning-table-styling")) {
+    customElements.define("com-custom-planning-table-styling", Styling);
+  }
 })();
