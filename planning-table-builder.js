@@ -13,10 +13,15 @@
       <div class="row check"><input id="planningEnabled" type="checkbox" /><label for="planningEnabled">Enable planning (editable cells)</label></div>
       <div class="row check"><input id="autoSubmit" type="checkbox" /><label for="autoSubmit">Write back immediately on cell change</label></div>
       <div class="row check"><input id="showInputControls" type="checkbox" /><label for="showInputControls">Show dimension input controls</label></div>
+      <div class="row check"><input id="rowInputControls" type="checkbox" /><label for="rowInputControls">Dimension dropdown in every table row</label></div>
       <div class="row check"><input id="linkedAnalysisEnabled" type="checkbox" /><label for="linkedAnalysisEnabled">Publish selection via linked analysis</label></div>
       <div class="row">
         <label for="inputControlDimensions">Input control dimensions (comma separated ids, empty = all)</label>
         <input id="inputControlDimensions" type="text" />
+      </div>
+      <div class="row">
+        <label for="rowInputControlDimensions">Row dropdown dimensions (comma separated ids, empty = all)</label>
+        <input id="rowInputControlDimensions" type="text" />
       </div>
       <button type="submit">Apply</button>
     </form>
@@ -35,6 +40,8 @@
               planningEnabled: this.planningEnabled,
               autoSubmit: this.autoSubmit,
               showInputControls: this.showInputControls,
+              rowInputControls: this.rowInputControls,
+              rowInputControlDimensions: this.rowInputControlDimensions,
               linkedAnalysisEnabled: this.linkedAnalysisEnabled,
               inputControlDimensions: this.inputControlDimensions,
             },
@@ -51,6 +58,10 @@
     get autoSubmit() { return this._cb("autoSubmit").checked; }
     set showInputControls(v) { this._cb("showInputControls").checked = !!v; }
     get showInputControls() { return this._cb("showInputControls").checked; }
+    set rowInputControls(v) { this._cb("rowInputControls").checked = !!v; }
+    get rowInputControls() { return this._cb("rowInputControls").checked; }
+    set rowInputControlDimensions(v) { this._cb("rowInputControlDimensions").value = v || ""; }
+    get rowInputControlDimensions() { return this._cb("rowInputControlDimensions").value; }
     set linkedAnalysisEnabled(v) { this._cb("linkedAnalysisEnabled").checked = !!v; }
     get linkedAnalysisEnabled() { return this._cb("linkedAnalysisEnabled").checked; }
     set inputControlDimensions(v) { this._cb("inputControlDimensions").value = v || ""; }
